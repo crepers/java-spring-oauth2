@@ -94,7 +94,7 @@ public class PasswordGrantTypeTest {
 	/**
 	 * 
 	 * WCJUNG
-	 * desc   :  Http Request Method
+	 * desc   :  Http Request Method for Spring framework
 	 * @param  
 	 * @return String
 	 */
@@ -118,5 +118,65 @@ public class PasswordGrantTypeTest {
 		String httpResponse = (null == response) ? "" : response.getBody();
 
 		return httpResponse;
+    }
+    
+    /**
+	 * 
+	 * WCJUNG
+	 * desc   :  Http Request Method for apache library.
+	 * @param  
+	 * @return String
+	 */
+	public String requestOAuthService(String uri, String httpMethod, String userAgent, String credentials, String param) {
+		String requestUrl = uri + param;
+		
+		HttpUriRequest request = null;
+		
+		if(httpMethod.equalsIgnoreCase("post")) {
+			request = new HttpPost(requestUrl);
+		} else {
+			request = new HttpGet(requestUrl);
+		}
+		
+		HttpClient client = HttpClients.createDefault();
+		HttpResponse httpResponse = null;
+		
+		// http request send
+		if(StringUtils.isNotBlank(userAgent)) {
+			request.setHeader("Content-type", "application/json; charset=UTF-8");
+			request.addHeader("User-Agent", userAgent);
+		}
+		if(StringUtils.isNotBlank(credentials)) {
+			request.addHeader("Authorization", "Basic " + credentials);
+		}
+
+		StringBuffer response = new StringBuffer();
+		
+		try {
+			httpResponse = client.execute(request);
+		
+		// verify the valid error code first
+		System.out.print("httpResponse.getStatusLine().getStatusCode() : ");
+		int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+		System.out.println("statusCode is " + statusCode);
+		if (statusCode != 200) {
+			throw new RuntimeException("Failed with HTTP error code : " + statusCode);
+		}
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
+        String inputLine;
+ 
+       	while ((inputLine = reader.readLine()) != null) {
+			    response.append(inputLine);
+			}
+       	
+       	if(null != reader) reader.close();
+       	
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+        
+		return response.toString();
 	}
 }
